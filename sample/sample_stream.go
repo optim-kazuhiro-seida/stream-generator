@@ -46,7 +46,7 @@ func (self *SampleStream) AnyMatch(fn func(arg Sample, index int) bool) bool {
 func (self *SampleStream) Clone() *SampleStream {
 	temp := make([]Sample, self.Len())
 	copy(temp, *self)
-	return (*SampleStream)(&temp)
+	return (*SampleStream)((&temp))
 }
 
 func (self *SampleStream) Copy() *SampleStream {
@@ -62,9 +62,6 @@ func (self *SampleStream) Delete(index int) *SampleStream {
 }
 
 func (self *SampleStream) DeleteRange(startIndex int, endIndex int) *SampleStream {
-	if startIndex < 0 || endIndex+1 > self.Len() {
-		return self
-	}
 	*self = append((*self)[:startIndex], (*self)[endIndex+1:]...)
 	return self
 }
@@ -140,6 +137,9 @@ func (self *SampleStream) Last() *Sample {
 }
 
 func (self *SampleStream) Len() int {
+	if self == nil {
+		return 0
+	}
 	return len(*self)
 }
 
@@ -151,11 +151,10 @@ func (self *SampleStream) Map(fn func(arg Sample, index int) Sample) *SampleStre
 }
 
 func (self *SampleStream) MapAny(fn func(arg Sample, index int) interface{}) []interface{} {
-	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
-		_array = append(_array, fn(v, i))
+		(*self).Set(i, fn(v, i))
 	}
-	return _array
+	return self
 }
 
 func (self *SampleStream) Map2Int(fn func(arg Sample, index int) int) []int {
@@ -344,11 +343,14 @@ func (self *SampleStream) Reverse() *SampleStream {
 }
 
 func (self *SampleStream) Replace(fn func(arg Sample, index int) Sample) *SampleStream {
-	return self.Map(fn)
+	for i, v := range *self {
+		(*self)[i] = fn(v, i)
+	}
+	return self
 }
 
 func (self *SampleStream) Set(index int, val Sample) {
-	if self.Len() > index && index >= 0 {
+	if len(*self) > index {
 		(*self)[index] = val
 	}
 }

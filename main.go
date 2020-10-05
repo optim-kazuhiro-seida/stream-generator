@@ -108,7 +108,7 @@ func (self *{{.TypeName}}Stream) AnyMatch(fn func(arg {{.TypeName}}, index int) 
 func (self *{{.TypeName}}Stream) Clone() *{{.TypeName}}Stream {
 	temp := make([]{{.TypeName}}, self.Len())
 	copy(temp, *self)
-	return (*{{.TypeName}})(&temp)
+	return (*{{.TypeName}}Stream)(&temp)
 }
 
 func (self *{{.TypeName}}Stream) Copy() *{{.TypeName}}Stream {
@@ -213,10 +213,11 @@ func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.Ty
 }
 
 func (self *{{.TypeName}}Stream) MapAny(fn func(arg {{.TypeName}}, index int) interface{}) []interface{} {
+	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
-		(*self).Set(i, fn(v, i))
+		_array = append(_array, fn(v, i))
 	}
-	return self
+	return _array
 }
 
 func (self *{{.TypeName}}Stream) Map2Int(fn func(arg {{.TypeName}}, index int) int) []int {
