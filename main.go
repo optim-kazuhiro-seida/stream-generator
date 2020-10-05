@@ -297,12 +297,12 @@ func (self *{{.TypeName}}Stream) Reduce(fn func(result, current {{.TypeName}}, i
 	return self.ReduceInit(fn, {{.TypeName}}{})
 }
 func (self *{{.TypeName}}Stream) ReduceInit(fn func(result, current {{.TypeName}}, index int) {{.TypeName}}, initialValue {{.TypeName}}) *{{.TypeName}}Stream {
-	result := []{{.TypeName}}{}
+	result :={{.TypeName}}StreamOf()
 	self.ForEach(func(v {{.TypeName}}, i int) {
 		if i == 0 {
-			result = append(result, fn(initialValue, v, i))
+			result.Add(fn(initialValue, v, i))
 		} else {
-			result = append(result, fn(result[i-1], v, i))
+			result.Add(fn(result[i-1], v, i))
 		}
 	})
 	*self = result

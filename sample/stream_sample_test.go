@@ -88,15 +88,23 @@ func TestStream(t *testing.T) {
 	if cloned2.Add(Sample{Str: "last", Int: 999}); cloned2.Last().Str != "last" || cloned2.Last().Int != 999 {
 		t.Fatal("Unexpect Value stream make slice.", cloned2)
 	}
-
 	if !cloned2.NoneMatch(func(_ Sample, _ int) bool { return false }) || cloned1.NoneMatch(func(_ Sample, _ int) bool { return true }) {
 		t.Fatal("Unexpect Value stream NoneMatch.", cloned2)
 	}
 	if stream.Get(8888) != nil || stream.Get(0) == nil || stream.Get(stream.Len()-1) == nil || stream.Get(-1) != nil {
 		t.Fatal("Unexpect Value stream Get.", stream)
 	}
-	if cloned3.ReduceInit(func(result, current Sample, index int) Sample { current.Int += result.Int; return current }, Sample{}); cloned3.Last().Int != 15 {
+	if cloned3.ReduceInit(func(result, current Sample, index int) Sample { current.Int += result.Int; return current }, Sample{Int: 0}); cloned3.Last().Int != 15 {
 		t.Fatal("Unexpect Value stream ReduceInit.", cloned3)
+	}
+	if cloned3.Replace(func(arg Sample, index int) Sample { return Sample{Str: "test", Int: 5} }); cloned2.First().Str != "test" && cloned2.First().Int != 5 && cloned2.Last().Str != "test" && cloned2.Last().Int != 5 {
+		t.Fatal("Unexpect Value stream Map.", cloned2)
+	}
+	if cloned3.Reduce(func(result, current Sample, index int) Sample { current.Int += result.Int; return current }); cloned3.Last().Int != 25 {
+		t.Fatal("Unexpect Value stream Reduce.", cloned3)
+	}
+	if cloned2.Reverse(); cloned2.First().Int != 999 || cloned2.Get(1).Int != 4 || cloned2.Get(2).Int != 3 || cloned2.Get(3).Int != 2 || cloned2.Get(4).Int != 1 || cloned2.Last().Int != 0 {
+		t.Fatal("Unexpect Value stream Reverse.", cloned3)
 	}
 
 }

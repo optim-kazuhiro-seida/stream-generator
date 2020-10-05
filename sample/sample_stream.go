@@ -236,12 +236,12 @@ func (self *SampleStream) Reduce(fn func(result, current Sample, index int) Samp
 	return self.ReduceInit(fn, Sample{})
 }
 func (self *SampleStream) ReduceInit(fn func(result, current Sample, index int) Sample, initialValue Sample) *SampleStream {
-	result := []Sample{}
+	result := SampleStreamOf()
 	self.ForEach(func(v Sample, i int) {
 		if i == 0 {
-			result = append(result, fn(initialValue, v, i))
+			result.Add(fn(initialValue, v, i))
 		} else {
-			result = append(result, fn(result[i-1], v, i))
+			result.Add(fn(result[i-1], v, i))
 		}
 	})
 	*self = result
@@ -348,7 +348,7 @@ func (self *SampleStream) Replace(fn func(arg Sample, index int) Sample) *Sample
 }
 
 func (self *SampleStream) Set(index int, val Sample) {
-	if len(*self) > index && index >= 0 {
+	if self.Len() > index && index >= 0 {
 		(*self)[index] = val
 	}
 }
