@@ -1,1 +1,25 @@
-# stream-generator
+# Stream Generator
+
+Golang generate command ndndnd
+
+## Source File [sample](./sample/sample.go)
+
+```shell script
+//go:generate stream-generator -type=Sample
+type Sample struct {
+	Str string
+	Int int
+}
+```
+
+
+## Command
+
+```shell script
+$ go get github.com/optim-kazuhiro-seida/stream-generator
+$ go generate
+```
+
+## Result
+
+You can look [source](./sample/sample_stream.go)
