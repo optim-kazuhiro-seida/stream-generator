@@ -106,9 +106,9 @@ func (self *{{.TypeName}}Stream) AnyMatch(fn func(arg {{.TypeName}}, index int) 
 	return false
 }
 func (self *{{.TypeName}}Stream) Clone() *{{.TypeName}}Stream {
-	temp := {{.TypeName}}StreamOf()
-	temp = *self
-	return &temp
+	temp := make([]{{.TypeName}}, self.Len())
+	copy(temp, *self)
+	return (*{{.TypeName}})(&temp)
 }
 
 func (self *{{.TypeName}}Stream) Copy() *{{.TypeName}}Stream {
@@ -120,12 +120,7 @@ func (self *{{.TypeName}}Stream) Concat(arg []{{.TypeName}}) *{{.TypeName}}Strea
 }
 
 func (self *{{.TypeName}}Stream) Delete(index int) *{{.TypeName}}Stream {
-	if len(*self) > index+1 {
-		*self = append((*self)[:index], (*self)[index+1:]...)
-	} else {
-		*self = append((*self)[:index])
-	}
-	return self
+	return self.DeleteRange(index, index)
 }
 
 func (self *{{.TypeName}}Stream) DeleteRange(startIndex int, endIndex int) *{{.TypeName}}Stream {
@@ -134,12 +129,12 @@ func (self *{{.TypeName}}Stream) DeleteRange(startIndex int, endIndex int) *{{.T
 }
 
 func (self *{{.TypeName}}Stream) Filter(fn func(arg {{.TypeName}}, index int) bool) *{{.TypeName}}Stream {
-	_array := []{{.TypeName}}{}
-	for i, v := range *self {
+	_array := SampleStreamOf()
+	self.ForEach(func(v Sample, i int) {
 		if fn(v, i) {
-			_array = append(_array, v)
+			_array.Add(v)
 		}
-	}
+	})
 	*self = _array
 	return self
 }
@@ -194,10 +189,7 @@ func (self *{{.TypeName}}Stream) GroupByValues(fn func(arg {{.TypeName}}, index 
 	return tmp
 }
 func (self *{{.TypeName}}Stream) IsEmpty() bool {
-	if self.Len() == 0 {
-		return true
-	}
-	return false
+	return self.Len() == 0
 }
 func (self *{{.TypeName}}Stream) IsPreset() bool {
 	return !self.IsEmpty()
@@ -214,20 +206,17 @@ func (self *{{.TypeName}}Stream) Len() int {
 }
 
 func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
-	_array := make([]{{.TypeName}}, 0, len(*self))
 	for i, v := range *self {
-		_array = append(_array, fn(v, i))
+		(*self).Set(i, fn(v, i))
 	}
-	*self = _array
 	return self
 }
 
 func (self *{{.TypeName}}Stream) MapAny(fn func(arg {{.TypeName}}, index int) interface{}) []interface{} {
-	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
-		_array = append(_array, fn(v, i))
+		(*self).Set(i, fn(v, i))
 	}
-	return _array
+	return self
 }
 
 func (self *{{.TypeName}}Stream) Map2Int(fn func(arg {{.TypeName}}, index int) int) []int {
@@ -304,30 +293,22 @@ func (self *{{.TypeName}}Stream) Get(index int) *{{.TypeName}} {
 	}
 	return nil
 }
+func (self *{{.TypeName}}Stream) Reduce(fn func(result, current {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
+	return self.ReduceInit(fn, {{.TypeName}}{})
+}
 func (self *{{.TypeName}}Stream) ReduceInit(fn func(result, current {{.TypeName}}, index int) {{.TypeName}}, initialValue {{.TypeName}}) *{{.TypeName}}Stream {
 	result := []{{.TypeName}}{}
-	for i, v := range *self {
+	self.ForEach(func(v {{.TypeName}}, i int) {
 		if i == 0 {
 			result = append(result, fn(initialValue, v, i))
 		} else {
 			result = append(result, fn(result[i-1], v, i))
 		}
-	}
+	})
 	*self = result
 	return self
 }
-func (self *{{.TypeName}}Stream) Reduce(fn func(result, current {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
-	result := []{{.TypeName}}{}
-	for i, v := range *self {
-		if i == 0 {
-			result = append(result, fn({{.TypeName}}{}, v, i))
-		} else {
-			result = append(result, fn(result[i-1], v, i))
-		}
-	}
-	*self = result
-	return self
-}
+
 func (self *{{.TypeName}}Stream) ReduceInterface(fn func(result interface{}, current {{.TypeName}}, index int) interface{}) []interface{} {
 	result := []interface{}{}
 	for i, v := range *self {
@@ -417,11 +398,9 @@ func (self *{{.TypeName}}Stream) ReduceBool(fn func(result bool, current {{.Type
 	return result
 }
 func (self *{{.TypeName}}Stream) Reverse() *{{.TypeName}}Stream {
-	_array := make([]{{.TypeName}}, 0, len(*self))
-	for i := len(*self) - 1; i >= 0; i-- {
-		_array = append(_array, (*self)[i])
+	for i, j := 0, len(*self)-1; i < j; i, j = i+1, j-1 {
+		(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
 	}
-	*self = _array
 	return self
 }
 
@@ -455,7 +434,7 @@ func (self *{{.TypeName}}Stream) ToList() []{{.TypeName}} {
 }
 
 func (self *{{.TypeName}}Stream) Val() []{{.TypeName}} {
-    if self == nil {R
+    if self == nil {
         return []{{.TypeName}}{}
     }
 	return *self
