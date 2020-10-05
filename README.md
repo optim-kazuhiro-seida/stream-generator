@@ -8,7 +8,7 @@ Golang generate command ndndnd
 $ go get  github.com/optim-kazuhiro-seida/stream-generator
 ```
 
-## Source File [sample](./sample/sample.go)
+## Source File ([sample](./sample/sample.go))
 
 ```shell script
 //go:generate stream-generator -type=Sample
@@ -22,7 +22,6 @@ type Sample struct {
 ## Command
 
 ```shell script
-$ go get github.com/optim-kazuhiro-seida/stream-generator
 $ go generate
 ```
 
