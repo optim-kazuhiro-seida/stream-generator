@@ -46,7 +46,7 @@ func (self *SampleStream) AnyMatch(fn func(arg Sample, index int) bool) bool {
 func (self *SampleStream) Clone() *SampleStream {
 	temp := make([]Sample, self.Len())
 	copy(temp, *self)
-	return (*SampleStream)((&temp))
+	return (*SampleStream)(&temp)
 }
 
 func (self *SampleStream) Copy() *SampleStream {
@@ -151,10 +151,11 @@ func (self *SampleStream) Map(fn func(arg Sample, index int) Sample) *SampleStre
 }
 
 func (self *SampleStream) MapAny(fn func(arg Sample, index int) interface{}) []interface{} {
+	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
-		(*self).Set(i, fn(v, i))
+		_array = append(_array, fn(v, i))
 	}
-	return self
+	return _array
 }
 
 func (self *SampleStream) Map2Int(fn func(arg Sample, index int) int) []int {
