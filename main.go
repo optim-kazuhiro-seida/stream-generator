@@ -129,8 +129,8 @@ func (self *{{.TypeName}}Stream) DeleteRange(startIndex int, endIndex int) *{{.T
 }
 
 func (self *{{.TypeName}}Stream) Filter(fn func(arg {{.TypeName}}, index int) bool) *{{.TypeName}}Stream {
-	_array := SampleStreamOf()
-	self.ForEach(func(v Sample, i int) {
+	_array := {{.TypeName}}StreamOf()
+	self.ForEach(func(v {{.TypeName}}, i int) {
 		if fn(v, i) {
 			_array.Add(v)
 		}
