@@ -62,6 +62,13 @@ func main() {
 
 var templateGenerator = template.Must(template.New("").Parse(`
 package {{.PackageName}}
+
+import (
+	"math"
+	"reflect"
+	"sort"
+)
+
 type {{.TypeName}}Stream []{{.TypeName}}
 
 func {{.TypeName}}StreamOf(arg ...{{.TypeName}}) {{.TypeName}}Stream {
@@ -128,7 +135,15 @@ func (self *{{.TypeName}}Stream) DeleteRange(startIndex int, endIndex int) *{{.T
 	return self
 }
 func (self *{{.TypeName}}Stream) Equals(arr []{{.TypeName}}) bool {
-	return reflect.DeepEqual(*self, arr)
+	if (*self == nil) != (arr == nil) || len(*self) != len(arr) {
+		return false
+	}
+	for i := range *self {
+		if !reflect.DeepEqual((*self)[i], arr[i]) {
+			return false
+		}
+	}
+	return true
 }
 func (self *{{.TypeName}}Stream) Filter(fn func(arg {{.TypeName}}, index int) bool) *{{.TypeName}}Stream {
 	_array := {{.TypeName}}StreamOf()
