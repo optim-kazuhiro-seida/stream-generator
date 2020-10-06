@@ -161,12 +161,14 @@ func (self *SampleStream) Last() *Sample {
 }
 
 func (self *SampleStream) Len() int {
+	if self == nil {
+		return 0
+	}
 	return len(*self)
 }
 
 func (self *SampleStream) Map(fn func(arg Sample, index int) Sample) *SampleStream {
-	self.ForEach(func(v Sample, i int) { self.Set(i, fn(v, i)) })
-	return self
+	return self.ForEach(func(v Sample, i int) { self.Set(i, fn(v, i)) })
 }
 
 func (self *SampleStream) MapAny(fn func(arg Sample, index int) interface{}) []interface{} {
@@ -276,13 +278,6 @@ func (self *SampleStream) Min(fn func(arg Sample, index int) float64) *Sample {
 func (self *SampleStream) NoneMatch(fn func(arg Sample, index int) bool) bool {
 	return !self.AnyMatch(fn)
 }
-func (self *SampleStream) Peek(fn func(arg *Sample, index int)) *SampleStream {
-	for i, v := range *self {
-		fn(&v, i)
-		self.Set(i, v)
-	}
-	return self
-}
 
 func (self *SampleStream) Get(index int) *Sample {
 	if self.Len() > index && index >= 0 {
@@ -291,7 +286,13 @@ func (self *SampleStream) Get(index int) *Sample {
 	}
 	return nil
 }
-
+func (self *SampleStream) Peek(fn func(arg *Sample, index int)) *SampleStream {
+	for i, v := range *self {
+		fn(&v, i)
+		self.Set(i, v)
+	}
+	return self
+}
 func (self *SampleStream) Reduce(fn func(result, current Sample, index int) Sample) *SampleStream {
 	return self.ReduceInit(fn, Sample{})
 }

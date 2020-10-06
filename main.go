@@ -234,7 +234,7 @@ func (self *{{.TypeName}}Stream) Len() int {
 }
 
 func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
-	self.ForEach(func(v {{.TypeName}}, i int) { self.Set(i, fn(v, i)) })
+	return self.ForEach(func(v {{.TypeName}}, i int) { self.Set(i, fn(v, i)) })
 }
 
 func (self *{{.TypeName}}Stream) MapAny(fn func(arg {{.TypeName}}, index int) interface{}) []interface{} {
