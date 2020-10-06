@@ -277,6 +277,7 @@ func (self *SampleStream) Min(fn func(arg Sample, index int) float64) *Sample {
 	}
 	return self.Get(index)
 }
+
 func (self *SampleStream) NoneMatch(fn func(arg Sample, index int) bool) bool {
 	return !self.AnyMatch(fn)
 }
@@ -430,6 +431,7 @@ func (self *SampleStream) SortStable(fn func(i, j int) bool) *SampleStream {
 	sort.SliceStable(*self, fn)
 	return self
 }
+
 func (self *SampleStream) ToList() []Sample {
 	return self.Val()
 }
