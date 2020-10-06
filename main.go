@@ -42,6 +42,8 @@ func main() {
 	flag.Parse()
 	if typeName == nil {
 		log.Fatalf("Nothing type name")
+	} else {
+		log.Println("Generating Struct name: ", *typeName)
 	}
 	if err != nil {
 		log.Fatalf("Missing the directory: %s", err)
@@ -56,8 +58,9 @@ func main() {
 		log.Fatalf("Missing format")
 	} else if err := ioutil.WriteFile(filepath.Join(dir, strings.ToLower(*typeName)+"_stream.go"), src, 0644); err != nil {
 		log.Fatalf("Writing a file: %s", err)
+	} else {
+		log.Println("Generated")
 	}
-
 }
 
 var templateGenerator = template.Must(template.New("").Parse(`
