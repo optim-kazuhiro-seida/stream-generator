@@ -67,7 +67,7 @@ func TestStream(t *testing.T) {
 	if index := stream.FindIndex(func(arg Sample, _ int) bool { return arg.Int == 8 }); index != stream.Len()-1 {
 		t.Fatal("Unexpect Value stream FindIndex.", stream)
 	}
-	if stream.First() != stream.Get(0) {
+	if !reflect.DeepEqual(stream.First(), stream.Get(0)) {
 		t.Fatal("Unexpect Value stream First.", stream)
 	}
 	if m := stream.GroupBy(func(arg Sample, _ int) string { return strconv.Itoa(arg.Int % 4) }); len(m["1"]) != 2 || m["1"][0].Int != 1 || m["2"][0].Int != 2 || m["3"][0].Int != 3 {
@@ -124,5 +124,26 @@ func TestStream(t *testing.T) {
 	if v := stream.Min(func(arg Sample, index int) float64 { return float64(arg.Int) }); v.Int != 1 {
 		t.Fatal("Unexpect Value stream Max.", stream)
 	}
-
+	if v := cloned2.Peek(func(arg *Sample, index int) { arg.Int = -1 }); v.Get(0).Int != -1 {
+		t.Fatal("Unexpect Value stream Peek.", cloned2)
+	}
+	if v := cloned2.ForEach(func(arg Sample, index int) { arg.Int = 2 }); v.Get(0).Int == 2 {
+		t.Fatal("Unexpect Value stream ForEach.", cloned2)
+	}
+	count := 0
+	if stream.While(func(arg Sample, index int) bool { arg.Int = -1; count++; return index != 3 }); count != 4 && stream.Get(0).Int == -1 {
+		t.Fatal("Unexpect Value stream While.", stream)
+	}
+	if v := stream.Get(0); v.Str != "1" {
+		t.Fatal("Unexpect Value stream Get.", stream)
+	} else {
+		v.Str = ""
+		(*v).Str = ""
+		if stream.Get(0).Str != "1" {
+			t.Fatal("Unexpect Value stream Get.", stream)
+		}
+	}
+	if stream.Set(stream.Len()-1, Sample{Str: "last", Int: 0}); stream.Last().Str != "last" {
+		t.Fatal("Unexpect Value stream Set.", stream)
+	}
 }

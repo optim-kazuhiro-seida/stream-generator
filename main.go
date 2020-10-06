@@ -168,7 +168,7 @@ func (self *{{.TypeName}}Stream) Find(fn func(arg {{.TypeName}}, index int) bool
 }
 
 func (self *{{.TypeName}}Stream) FindIndex(fn func(arg {{.TypeName}}, index int) bool) int {
-	for i, v := range *self {
+	for i, v := range self.Val() {
 		if fn(v, i) {
 			return i
 		}
@@ -181,20 +181,20 @@ func (self *{{.TypeName}}Stream) First() *{{.TypeName}} {
 }
 
 func (self *{{.TypeName}}Stream) ForEach(fn func(arg {{.TypeName}}, index int)) *{{.TypeName}}Stream {
-	for i, v := range *self {
+	for i, v := range self.Val() {
 		fn(v, i)
 	}
 	return self
 }
 func (self *{{.TypeName}}Stream) ForEachRight(fn func(arg {{.TypeName}}, index int)) *{{.TypeName}}Stream {
-	for i := len(*self) - 1; i >= 0; i-- {
-		fn((*self)[i], i)
+	for i := self.Len() - 1; i >= 0; i-- {
+		fn(*self.Get(i), i)
 	}
 	return self
 }
 func (self *{{.TypeName}}Stream) GroupBy(fn func(arg {{.TypeName}}, index int) string) map[string][]{{.TypeName}} {
     m := map[string][]{{.TypeName}}{}
-    for i, v := range *self {
+    for i, v := range self.Val() {
         key := fn(v, i)
         m[key] = append(m[key], v)
     }
@@ -234,10 +234,7 @@ func (self *{{.TypeName}}Stream) Len() int {
 }
 
 func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
-	for i, v := range *self {
-		self.Set(i, fn(v, i))
-	}
-	return self
+	self.ForEach(func(v {{.TypeName}}, i int) { self.Set(i, fn(v, i)) })
 }
 
 func (self *{{.TypeName}}Stream) MapAny(fn func(arg {{.TypeName}}, index int) interface{}) []interface{} {
@@ -319,7 +316,7 @@ func (self *{{.TypeName}}Stream) Max(fn func(arg {{.TypeName}}, index int) float
 	m := fn(*f, 0)
 	index := 0
 	for i := 1; i < self.Len(); i++ {
-		v := fn((*self)[i], i)
+		v := fn(*self.Get(i), i)
 		m = math.Max(m, v)
 		if m == v {
 			index = i
@@ -335,7 +332,7 @@ func (self *{{.TypeName}}Stream) Min(fn func(arg {{.TypeName}}, index int) float
 	m := fn(*f, 0)
 	index := 0
 	for i := 1; i < self.Len(); i++ {
-		v := fn((*self)[i], i)
+		v := fn(*self.Get(i), i)
 		m = math.Min(m, v)
 		if m == v {
 			index = i
@@ -350,9 +347,17 @@ func (self *{{.TypeName}}Stream) NoneMatch(fn func(arg {{.TypeName}}, index int)
 
 func (self *{{.TypeName}}Stream) Get(index int) *{{.TypeName}} {
 	if self.Len() > index && index >= 0 {
-		return &(*self)[index]
+		tmp := (*self)[index]
+        return &tmp
 	}
 	return nil
+}
+func (self *{{.TypeName}}Stream) Peek(fn func(arg *{{.TypeName}}, index int)) *{{.TypeName}}Stream {
+    for i, v := range *self {
+        fn(&v, i)
+        self.Set(i, v)
+    }
+    return self
 }
 func (self *{{.TypeName}}Stream) Reduce(fn func(result, current {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
 	return self.ReduceInit(fn, {{.TypeName}}{})
@@ -459,23 +464,21 @@ func (self *{{.TypeName}}Stream) ReduceBool(fn func(result bool, current {{.Type
 	return result
 }
 func (self *{{.TypeName}}Stream) Reverse() *{{.TypeName}}Stream {
-	for i, j := 0, len(*self)-1; i < j; i, j = i+1, j-1 {
+	for i, j := 0, self.Len()-1; i < j; i, j = i+1, j-1 {
 		(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
 	}
 	return self
 }
 
 func (self *{{.TypeName}}Stream) Replace(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
-	for i, v := range *self {
-		(*self)[i] = fn(v, i)
-	}
-	return self
+	return self.Map(fn)
 }
 
-func (self *{{.TypeName}}Stream) Set(index int, val {{.TypeName}}) {
-	if len(*self) > index {
-		(*self)[index] = val
-	}
+func (self *{{.TypeName}}Stream) Set(index int, val {{.TypeName}}) *{{.TypeName}}Stream {
+    if len(*self) > index {
+        (*self)[index] = val
+    }
+    return self
 }
 
 func (self *{{.TypeName}}Stream) Slice(startIndex int, n int) *{{.TypeName}}Stream {
@@ -509,4 +512,12 @@ func (self *{{.TypeName}}Stream) Val() []{{.TypeName}} {
 	return *self
 }
 
+func (self *{{.TypeName}}Stream) While(fn func(arg {{.TypeName}}, index int) bool) *{{.TypeName}}Stream {
+    for i, v := range self.Val() {
+        if !fn(v, i) {
+            break
+        }
+    }
+    return self
+}
 `))
