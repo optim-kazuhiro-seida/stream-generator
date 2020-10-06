@@ -146,4 +146,7 @@ func TestStream(t *testing.T) {
 	if stream.Set(stream.Len()-1, Sample{Str: "last", Int: 0}); stream.Last().Str != "last" {
 		t.Fatal("Unexpect Value stream Set.", stream)
 	}
+	if tmp := stream.Copy().Skip(2).Limit(2); tmp.Get(0).Int != 3 || tmp.Len() != 2 {
+		t.Fatal("Unexpect Value stream Limit and Skip.", stream)
+	}
 }

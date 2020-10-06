@@ -159,6 +159,10 @@ func (self *SampleStream) IsPreset() bool {
 func (self *SampleStream) Last() *Sample {
 	return self.Get(self.Len() - 1)
 }
+func (self *SampleStream) Limit(limit int) *SampleStream {
+	self.Slice(0, limit)
+	return self
+}
 
 func (self *SampleStream) Len() int {
 	if self == nil {
@@ -412,6 +416,10 @@ func (self *SampleStream) Set(index int, val Sample) *SampleStream {
 	if len(*self) > index {
 		(*self)[index] = val
 	}
+	return self
+}
+func (self *SampleStream) Skip(skip int) *SampleStream {
+	self.Slice(skip, self.Len()-skip)
 	return self
 }
 

@@ -232,7 +232,10 @@ func (self *{{.TypeName}}Stream) Len() int {
 	}
 	return len(*self)
 }
-
+func (self *{{.TypeName}}Stream) Limit(limit int) *{{.TypeName}}Stream {
+	self.Slice(0, limit)
+	return self
+}
 func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
 	return self.ForEach(func(v {{.TypeName}}, i int) { self.Set(i, fn(v, i)) })
 }
@@ -463,6 +466,7 @@ func (self *{{.TypeName}}Stream) ReduceBool(fn func(result bool, current {{.Type
 	}
 	return result
 }
+
 func (self *{{.TypeName}}Stream) Reverse() *{{.TypeName}}Stream {
 	for i, j := 0, self.Len()-1; i < j; i, j = i+1, j-1 {
 		(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
@@ -481,6 +485,11 @@ func (self *{{.TypeName}}Stream) Set(index int, val {{.TypeName}}) *{{.TypeName}
     return self
 }
 
+func (self *{{.TypeName}}Stream) Skip(skip int) *{{.TypeName}}Stream {
+	self.Slice(skip, self.Len()-skip)
+	return self
+}
+
 func (self *{{.TypeName}}Stream) Slice(startIndex int, n int) *{{.TypeName}}Stream {
     last := startIndex+n
     if len(*self)-1 < startIndex {
@@ -492,10 +501,12 @@ func (self *{{.TypeName}}Stream) Slice(startIndex int, n int) *{{.TypeName}}Stre
     }
 	return self
 }
+
 func (self *{{.TypeName}}Stream) Sort(fn func(i, j int) bool) *{{.TypeName}}Stream {
 	sort.Slice(*self, fn)
 	return self
 }
+
 func (self *{{.TypeName}}Stream) SortStable(fn func(i, j int) bool) *{{.TypeName}}Stream {
 	sort.SliceStable(*self, fn)
 	return self
