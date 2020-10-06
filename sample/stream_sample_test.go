@@ -106,5 +106,23 @@ func TestStream(t *testing.T) {
 	if cloned2.Reverse(); cloned2.First().Int != 999 || cloned2.Get(1).Int != 4 || cloned2.Get(2).Int != 3 || cloned2.Get(3).Int != 2 || cloned2.Get(4).Int != 1 || cloned2.Last().Int != 0 {
 		t.Fatal("Unexpect Value stream Reverse.", cloned3)
 	}
+	if cloned2 = stream.Copy(); !stream.Equals(cloned2.Val()) || stream.Equals(cloned3.Val()) {
+		t.Fatal("Unexpect Value stream Copy.", stream)
+	}
+	if index := stream.IndexOf(*stream.Get(3)); index != 3 {
+		t.Fatal("Unexpect Value stream IndexOf.", stream)
+	}
+	if index := stream.IndexOf(*stream.Get(2)); index != 2 {
+		t.Fatal("Unexpect Value stream IndexOf.", stream)
+	}
+	if index := stream.IndexOf(*stream.Get(5)); index != 5 {
+		t.Fatal("Unexpect Value stream IndexOf.", stream)
+	}
+	if v := stream.Max(func(arg Sample, index int) float64 { return float64(arg.Int) }); v.Int != 8 {
+		t.Fatal("Unexpect Value stream Max.", stream)
+	}
+	if v := stream.Min(func(arg Sample, index int) float64 { return float64(arg.Int) }); v.Int != 1 {
+		t.Fatal("Unexpect Value stream Max.", stream)
+	}
 
 }

@@ -127,7 +127,9 @@ func (self *{{.TypeName}}Stream) DeleteRange(startIndex int, endIndex int) *{{.T
 	*self = append((*self)[:startIndex], (*self)[endIndex+1:]...)
 	return self
 }
-
+func (self *{{.TypeName}}Stream) Equals(arr []{{.TypeName}}) bool {
+	return reflect.DeepEqual(*self, arr)
+}
 func (self *{{.TypeName}}Stream) Filter(fn func(arg {{.TypeName}}, index int) bool) *{{.TypeName}}Stream {
 	_array := {{.TypeName}}StreamOf()
 	self.ForEach(func(v {{.TypeName}}, i int) {
@@ -187,6 +189,14 @@ func (self *{{.TypeName}}Stream) GroupByValues(fn func(arg {{.TypeName}}, index 
 		tmp = append(tmp, v)
 	}
 	return tmp
+}
+func (self *{{.TypeName}}Stream) IndexOf(arg {{.TypeName}}) int {
+	for index, _arg := range *self {
+		if reflect.DeepEqual(_arg, arg) {
+			return index
+		}
+	}
+	return -1
 }
 func (self *{{.TypeName}}Stream) IsEmpty() bool {
 	return self.Len() == 0
@@ -282,6 +292,38 @@ func (self *{{.TypeName}}Stream) Map2String(fn func(arg {{.TypeName}}, index int
 		_array = append(_array, fn(v, i))
 	}
 	return _array
+}
+func (self *{{.TypeName}}Stream) Max(fn func(arg {{.TypeName}}, index int) float64) *{{.TypeName}} {
+	f := self.Get(0)
+	if f == nil {
+		return nil
+	}
+	m := fn(*f, 0)
+	index := 0
+	for i := 1; i < self.Len(); i++ {
+		v := fn((*self)[i], i)
+		m = math.Max(m, v)
+		if m == v {
+			index = i
+		}
+	}
+	return self.Get(index)
+}
+func (self *{{.TypeName}}Stream) Min(fn func(arg {{.TypeName}}, index int) float64) *{{.TypeName}} {
+	f := self.Get(0)
+	if f == nil {
+		return nil
+	}
+	m := fn(*f, 0)
+	index := 0
+	for i := 1; i < self.Len(); i++ {
+		v := fn((*self)[i], i)
+		m = math.Min(m, v)
+		if m == v {
+			index = i
+		}
+	}
+	return self.Get(index)
 }
 
 func (self *{{.TypeName}}Stream) NoneMatch(fn func(arg {{.TypeName}}, index int) bool) bool {
@@ -427,6 +469,14 @@ func (self *{{.TypeName}}Stream) Slice(startIndex int, n int) *{{.TypeName}}Stre
     } else {
         *self = (*self)[startIndex:last]
     }
+	return self
+}
+func (self *{{.TypeName}}Stream) Sort(fn func(i, j int) bool) *{{.TypeName}}Stream {
+	sort.Slice(*self, fn)
+	return self
+}
+func (self *{{.TypeName}}Stream) SortStable(fn func(i, j int) bool) *{{.TypeName}}Stream {
+	sort.SliceStable(*self, fn)
 	return self
 }
 

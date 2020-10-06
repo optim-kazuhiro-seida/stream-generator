@@ -1,5 +1,11 @@
 package sample
 
+import (
+	"math"
+	"reflect"
+	"sort"
+)
+
 type SampleStream []Sample
 
 func SampleStreamOf(arg ...Sample) SampleStream {
@@ -65,7 +71,17 @@ func (self *SampleStream) DeleteRange(startIndex int, endIndex int) *SampleStrea
 	*self = append((*self)[:startIndex], (*self)[endIndex+1:]...)
 	return self
 }
-
+func (self *SampleStream) Equals(arr []Sample) bool {
+	if (*self == nil) != (arr == nil) || len(*self) != len(arr) {
+		return false
+	}
+	for i := range *self {
+		if !reflect.DeepEqual((*self)[i], arr[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (self *SampleStream) Filter(fn func(arg Sample, index int) bool) *SampleStream {
 	_array := SampleStreamOf()
 	self.ForEach(func(v Sample, i int) {
@@ -125,6 +141,14 @@ func (self *SampleStream) GroupByValues(fn func(arg Sample, index int) string) [
 		tmp = append(tmp, v)
 	}
 	return tmp
+}
+func (self *SampleStream) IndexOf(arg Sample) int {
+	for index, _arg := range *self {
+		if reflect.DeepEqual(_arg, arg) {
+			return index
+		}
+	}
+	return -1
 }
 func (self *SampleStream) IsEmpty() bool {
 	return self.Len() == 0
@@ -221,7 +245,38 @@ func (self *SampleStream) Map2String(fn func(arg Sample, index int) string) []st
 	}
 	return _array
 }
-
+func (self *SampleStream) Max(fn func(arg Sample, index int) float64) *Sample {
+	f := self.Get(0)
+	if f == nil {
+		return nil
+	}
+	m := fn(*f, 0)
+	index := 0
+	for i := 1; i < self.Len(); i++ {
+		v := fn((*self)[i], i)
+		m = math.Max(m, v)
+		if m == v {
+			index = i
+		}
+	}
+	return self.Get(index)
+}
+func (self *SampleStream) Min(fn func(arg Sample, index int) float64) *Sample {
+	f := self.Get(0)
+	if f == nil {
+		return nil
+	}
+	m := fn(*f, 0)
+	index := 0
+	for i := 1; i < self.Len(); i++ {
+		v := fn((*self)[i], i)
+		m = math.Min(m, v)
+		if m == v {
+			index = i
+		}
+	}
+	return self.Get(index)
+}
 func (self *SampleStream) NoneMatch(fn func(arg Sample, index int) bool) bool {
 	return !self.AnyMatch(fn)
 }
@@ -367,7 +422,14 @@ func (self *SampleStream) Slice(startIndex int, n int) *SampleStream {
 	}
 	return self
 }
-
+func (self *SampleStream) Sort(fn func(i, j int) bool) *SampleStream {
+	sort.Slice(*self, fn)
+	return self
+}
+func (self *SampleStream) SortStable(fn func(i, j int) bool) *SampleStream {
+	sort.SliceStable(*self, fn)
+	return self
+}
 func (self *SampleStream) ToList() []Sample {
 	return self.Val()
 }
