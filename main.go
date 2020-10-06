@@ -232,7 +232,7 @@ func (self *{{.TypeName}}Stream) Len() int {
 
 func (self *{{.TypeName}}Stream) Map(fn func(arg {{.TypeName}}, index int) {{.TypeName}}) *{{.TypeName}}Stream {
 	for i, v := range *self {
-		(*self).Set(i, fn(v, i))
+		self.Set(i, fn(v, i))
 	}
 	return self
 }
