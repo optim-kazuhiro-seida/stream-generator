@@ -5,7 +5,7 @@ Golang generate command ndndnd
 ## Go get
 
 ```shell script
-$ go get github.com/optim-kazuhiro-seida/stream-generator
+$ go get -u github.com/optim-kazuhiro-seida/stream-generator
 ```
 
 ## Source File ([sample](./sample/sample.go))
