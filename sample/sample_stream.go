@@ -159,10 +159,6 @@ func (self *SampleStream) IsPreset() bool {
 func (self *SampleStream) Last() *Sample {
 	return self.Get(self.Len() - 1)
 }
-func (self *SampleStream) Limit(limit int) *SampleStream {
-	self.Slice(0, limit)
-	return self
-}
 
 func (self *SampleStream) Len() int {
 	if self == nil {
@@ -170,7 +166,10 @@ func (self *SampleStream) Len() int {
 	}
 	return len(*self)
 }
-
+func (self *SampleStream) Limit(limit int) *SampleStream {
+	self.Slice(0, limit)
+	return self
+}
 func (self *SampleStream) Map(fn func(arg Sample, index int) Sample) *SampleStream {
 	return self.ForEach(func(v Sample, i int) { self.Set(i, fn(v, i)) })
 }
@@ -401,6 +400,7 @@ func (self *SampleStream) ReduceBool(fn func(result bool, current Sample, index 
 	}
 	return result
 }
+
 func (self *SampleStream) Reverse() *SampleStream {
 	for i, j := 0, self.Len()-1; i < j; i, j = i+1, j-1 {
 		(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
@@ -418,6 +418,7 @@ func (self *SampleStream) Set(index int, val Sample) *SampleStream {
 	}
 	return self
 }
+
 func (self *SampleStream) Skip(skip int) *SampleStream {
 	self.Slice(skip, self.Len()-skip)
 	return self
@@ -434,10 +435,12 @@ func (self *SampleStream) Slice(startIndex int, n int) *SampleStream {
 	}
 	return self
 }
+
 func (self *SampleStream) Sort(fn func(i, j int) bool) *SampleStream {
 	sort.Slice(*self, fn)
 	return self
 }
+
 func (self *SampleStream) SortStable(fn func(i, j int) bool) *SampleStream {
 	sort.SliceStable(*self, fn)
 	return self
