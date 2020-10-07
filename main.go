@@ -490,6 +490,14 @@ func (self *{{.TypeName}}Stream) Skip(skip int) *{{.TypeName}}Stream {
 	return self
 }
 
+func (self *{{.TypeName}}Stream) SkippingEach(fn func({{.TypeName}}, int) int) *{{.TypeName}}Stream {
+	for i := 0; i < self.Len(); i++ {
+		skip := fn(*self.Get(i), i)
+		i += skip
+	}
+	return self
+}
+
 func (self *{{.TypeName}}Stream) Slice(startIndex int, n int) *{{.TypeName}}Stream {
     last := startIndex+n
     if len(*self)-1 < startIndex {

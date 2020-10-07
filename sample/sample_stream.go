@@ -424,6 +424,14 @@ func (self *SampleStream) Skip(skip int) *SampleStream {
 	return self
 }
 
+func (self *SampleStream) SkippingEach(fn func(Sample, int) int) *SampleStream {
+	for i := 0; i < self.Len(); i++ {
+		skip := fn(*self.Get(i), i)
+		i += skip
+	}
+	return self
+}
+
 func (self *SampleStream) Slice(startIndex int, n int) *SampleStream {
 	last := startIndex + n
 	if len(*self)-1 < startIndex {
