@@ -56,10 +56,10 @@ func main() {
 	}
 	if src, err := format.Source(buf.Bytes()); err != nil {
 		log.Fatalf("Missing format")
-	} else if err := ioutil.WriteFile(filepath.Join(dir, strings.ToLower(*typeName)+"_stream.go"), src, 0644); err != nil {
+	} else if err := ioutil.WriteFile(filepath.Join(dir, "stream_"+strings.ToLower(*typeName)+".go"), src, 0644); err != nil {
 		log.Fatalf("Writing a file: %s", err)
 	} else {
-		log.Println("Generated")
+		log.Println("Generated "+ filepath.Join(dir, "stream_"+strings.ToLower(*typeName)+".go")
 	}
 }
 
