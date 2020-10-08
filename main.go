@@ -1,16 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"go/build"
-	"go/format"
 	"go/types"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"golang.org/x/tools/go/loader"
 )
@@ -37,10 +34,9 @@ func main() {
 	var (
 		typeName = flag.String("type", "", "struct name, -type={{Struct}}")
 		dir, err = filepath.Abs(".")
-		buf      bytes.Buffer
 	)
 	flag.Parse()
-	if typeName == nil {
+	if typeName == nil || *typeName == "" {
 		log.Fatalf("Nothing type name")
 	} else {
 		log.Println("Generating Struct name: ", *typeName)
@@ -48,22 +44,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("Missing the directory: %s", err)
 	}
-	if err := templateGenerator.Execute(&buf, Variable{
-		TypeName:    *typeName,
-		PackageName: scanPkg(dir).Pkg.Name(),
-	}); err != nil {
-		log.Fatalf("Cannot generate: %s", err)
-	}
-	if src, err := format.Source(buf.Bytes()); err != nil {
-		log.Fatalf("Missing format")
-	} else if err := ioutil.WriteFile(filepath.Join(dir, "stream_"+strings.ToLower(*typeName)+".go"), src, 0644); err != nil {
+
+	result := strings.Replace(template, "{{.TypeName}}", *typeName, -1)
+	log.Println("Scan Type Name.")
+
+	result = strings.Replace(result, "{{.PackageName}}", scanPkg(dir).Pkg.Name(), -1)
+	log.Println("Scan Package Name.")
+
+	if err := ioutil.WriteFile(filepath.Join(dir, "stream_"+strings.ToLower(*typeName)+".go"), []byte(result), 0644); err != nil {
 		log.Fatalf("Writing a file: %s", err)
 	} else {
 		log.Println("Generated " + filepath.Join(dir, "stream_"+strings.ToLower(*typeName)+".go"))
 	}
 }
 
-var templateGenerator = template.Must(template.New("").Parse(`
+var template = `
 package {{.PackageName}}
 
 import (
@@ -539,4 +534,4 @@ func (self *{{.TypeName}}Stream) While(fn func(arg {{.TypeName}}, index int) boo
     }
     return self
 }
-`))
+`
