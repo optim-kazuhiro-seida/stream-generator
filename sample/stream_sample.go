@@ -1,4 +1,3 @@
-
 package sample
 
 import (
@@ -27,13 +26,13 @@ func (self *SampleStream) AddAll(arg ...Sample) *SampleStream {
 }
 
 func (self *SampleStream) AddSafe(arg *Sample) *SampleStream {
-    if arg != nil {
-        self.Add(*arg)
-    }
+	if arg != nil {
+		self.Add(*arg)
+	}
 	return self
 
 }
-func (self *SampleStream) AllMatch(fn func(arg Sample, index int) bool) bool {
+func (self *SampleStream) AllMatch(fn func(Sample, int) bool) bool {
 	for i, v := range *self {
 		if !fn(v, i) {
 			return false
@@ -42,7 +41,7 @@ func (self *SampleStream) AllMatch(fn func(arg Sample, index int) bool) bool {
 	return true
 }
 
-func (self *SampleStream) AnyMatch(fn func(arg Sample, index int) bool) bool {
+func (self *SampleStream) AnyMatch(fn func(Sample, int) bool) bool {
 	for i, v := range *self {
 		if fn(v, i) {
 			return true
@@ -64,14 +63,31 @@ func (self *SampleStream) Concat(arg []Sample) *SampleStream {
 	return self.AddAll(arg...)
 }
 
+func (self *SampleStream) Contains(arg Sample) bool {
+	return self.FindIndex(func(_arg Sample, index int) bool { return reflect.DeepEqual(_arg, arg) }) != -1
+}
+
 func (self *SampleStream) Delete(index int) *SampleStream {
 	return self.DeleteRange(index, index)
 }
 
-func (self *SampleStream) DeleteRange(startIndex int, endIndex int) *SampleStream {
+func (self *SampleStream) DeleteRange(startIndex, endIndex int) *SampleStream {
 	*self = append((*self)[:startIndex], (*self)[endIndex+1:]...)
 	return self
 }
+
+func (self *SampleStream) Distinct() *SampleStream {
+	m := map[Sample]bool{}
+	self.Filter(func(arg Sample, index int) bool {
+		_, ok := m[arg]
+		if !ok {
+			m[arg] = true
+		}
+		return !ok
+	})
+	return self
+}
+
 func (self *SampleStream) Equals(arr []Sample) bool {
 	if (*self == nil) != (arr == nil) || len(*self) != len(arr) {
 		return false
@@ -83,7 +99,7 @@ func (self *SampleStream) Equals(arr []Sample) bool {
 	}
 	return true
 }
-func (self *SampleStream) Filter(fn func(arg Sample, index int) bool) *SampleStream {
+func (self *SampleStream) Filter(fn func(Sample, int) bool) *SampleStream {
 	_array := SampleStreamOf()
 	self.ForEach(func(v Sample, i int) {
 		if fn(v, i) {
@@ -94,7 +110,7 @@ func (self *SampleStream) Filter(fn func(arg Sample, index int) bool) *SampleStr
 	return self
 }
 
-func (self *SampleStream) Find(fn func(arg Sample, index int) bool) *Sample {
+func (self *SampleStream) Find(fn func(Sample, int) bool) *Sample {
 	i := self.FindIndex(fn)
 	if -1 != i {
 		return &(*self)[i]
@@ -102,7 +118,7 @@ func (self *SampleStream) Find(fn func(arg Sample, index int) bool) *Sample {
 	return nil
 }
 
-func (self *SampleStream) FindIndex(fn func(arg Sample, index int) bool) int {
+func (self *SampleStream) FindIndex(fn func(Sample, int) bool) int {
 	for i, v := range self.Val() {
 		if fn(v, i) {
 			return i
@@ -115,27 +131,27 @@ func (self *SampleStream) First() *Sample {
 	return self.Get(0)
 }
 
-func (self *SampleStream) ForEach(fn func(arg Sample, index int)) *SampleStream {
+func (self *SampleStream) ForEach(fn func(Sample, int)) *SampleStream {
 	for i, v := range self.Val() {
 		fn(v, i)
 	}
 	return self
 }
-func (self *SampleStream) ForEachRight(fn func(arg Sample, index int)) *SampleStream {
+func (self *SampleStream) ForEachRight(fn func(Sample, int)) *SampleStream {
 	for i := self.Len() - 1; i >= 0; i-- {
 		fn(*self.Get(i), i)
 	}
 	return self
 }
-func (self *SampleStream) GroupBy(fn func(arg Sample, index int) string) map[string][]Sample {
-    m := map[string][]Sample{}
-    for i, v := range self.Val() {
-        key := fn(v, i)
-        m[key] = append(m[key], v)
-    }
-    return m
+func (self *SampleStream) GroupBy(fn func(Sample, int) string) map[string][]Sample {
+	m := map[string][]Sample{}
+	for i, v := range self.Val() {
+		key := fn(v, i)
+		m[key] = append(m[key], v)
+	}
+	return m
 }
-func (self *SampleStream) GroupByValues(fn func(arg Sample, index int) string) [][]Sample {
+func (self *SampleStream) GroupByValues(fn func(Sample, int) string) [][]Sample {
 	tmp := [][]Sample{}
 	m := self.GroupBy(fn)
 	for _, v := range m {
@@ -162,7 +178,7 @@ func (self *SampleStream) Last() *Sample {
 }
 
 func (self *SampleStream) Len() int {
-    if self == nil {
+	if self == nil {
 		return 0
 	}
 	return len(*self)
@@ -171,11 +187,11 @@ func (self *SampleStream) Limit(limit int) *SampleStream {
 	self.Slice(0, limit)
 	return self
 }
-func (self *SampleStream) Map(fn func(arg Sample, index int) Sample) *SampleStream {
+func (self *SampleStream) Map(fn func(Sample, int) Sample) *SampleStream {
 	return self.ForEach(func(v Sample, i int) { self.Set(i, fn(v, i)) })
 }
 
-func (self *SampleStream) MapAny(fn func(arg Sample, index int) interface{}) []interface{} {
+func (self *SampleStream) MapAny(fn func(Sample, int) interface{}) []interface{} {
 	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -183,7 +199,7 @@ func (self *SampleStream) MapAny(fn func(arg Sample, index int) interface{}) []i
 	return _array
 }
 
-func (self *SampleStream) Map2Int(fn func(arg Sample, index int) int) []int {
+func (self *SampleStream) Map2Int(fn func(Sample, int) int) []int {
 	_array := make([]int, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -191,7 +207,7 @@ func (self *SampleStream) Map2Int(fn func(arg Sample, index int) int) []int {
 	return _array
 }
 
-func (self *SampleStream) Map2Int32(fn func(arg Sample, index int) int32) []int32 {
+func (self *SampleStream) Map2Int32(fn func(Sample, int) int32) []int32 {
 	_array := make([]int32, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -199,7 +215,7 @@ func (self *SampleStream) Map2Int32(fn func(arg Sample, index int) int32) []int3
 	return _array
 }
 
-func (self *SampleStream) Map2Int64(fn func(arg Sample, index int) int64) []int64 {
+func (self *SampleStream) Map2Int64(fn func(Sample, int) int64) []int64 {
 	_array := make([]int64, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -207,7 +223,7 @@ func (self *SampleStream) Map2Int64(fn func(arg Sample, index int) int64) []int6
 	return _array
 }
 
-func (self *SampleStream) Map2Float32(fn func(arg Sample, index int) float32) []float32 {
+func (self *SampleStream) Map2Float32(fn func(Sample, int) float32) []float32 {
 	_array := make([]float32, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -215,7 +231,7 @@ func (self *SampleStream) Map2Float32(fn func(arg Sample, index int) float32) []
 	return _array
 }
 
-func (self *SampleStream) Map2Float64(fn func(arg Sample, index int) float64) []float64 {
+func (self *SampleStream) Map2Float64(fn func(Sample, int) float64) []float64 {
 	_array := make([]float64, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -223,7 +239,7 @@ func (self *SampleStream) Map2Float64(fn func(arg Sample, index int) float64) []
 	return _array
 }
 
-func (self *SampleStream) Map2Bool(fn func(arg Sample, index int) bool) []bool {
+func (self *SampleStream) Map2Bool(fn func(Sample, int) bool) []bool {
 	_array := make([]bool, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -231,7 +247,7 @@ func (self *SampleStream) Map2Bool(fn func(arg Sample, index int) bool) []bool {
 	return _array
 }
 
-func (self *SampleStream) Map2Bytes(fn func(arg Sample, index int) []byte) [][]byte {
+func (self *SampleStream) Map2Bytes(fn func(Sample, int) []byte) [][]byte {
 	_array := make([][]byte, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
@@ -239,14 +255,14 @@ func (self *SampleStream) Map2Bytes(fn func(arg Sample, index int) []byte) [][]b
 	return _array
 }
 
-func (self *SampleStream) Map2String(fn func(arg Sample, index int) string) []string {
+func (self *SampleStream) Map2String(fn func(Sample, int) string) []string {
 	_array := make([]string, 0, len(*self))
 	for i, v := range *self {
 		_array = append(_array, fn(v, i))
 	}
 	return _array
 }
-func (self *SampleStream) Max(fn func(arg Sample, index int) float64) *Sample {
+func (self *SampleStream) Max(fn func(Sample, int) float64) *Sample {
 	f := self.Get(0)
 	if f == nil {
 		return nil
@@ -262,7 +278,7 @@ func (self *SampleStream) Max(fn func(arg Sample, index int) float64) *Sample {
 	}
 	return self.Get(index)
 }
-func (self *SampleStream) Min(fn func(arg Sample, index int) float64) *Sample {
+func (self *SampleStream) Min(fn func(Sample, int) float64) *Sample {
 	f := self.Get(0)
 	if f == nil {
 		return nil
@@ -279,29 +295,29 @@ func (self *SampleStream) Min(fn func(arg Sample, index int) float64) *Sample {
 	return self.Get(index)
 }
 
-func (self *SampleStream) NoneMatch(fn func(arg Sample, index int) bool) bool {
+func (self *SampleStream) NoneMatch(fn func(Sample, int) bool) bool {
 	return !self.AnyMatch(fn)
 }
 
 func (self *SampleStream) Get(index int) *Sample {
 	if self.Len() > index && index >= 0 {
 		tmp := (*self)[index]
-        return &tmp
+		return &tmp
 	}
 	return nil
 }
-func (self *SampleStream) Peek(fn func(arg *Sample, index int)) *SampleStream {
-    for i, v := range *self {
-        fn(&v, i)
-        self.Set(i, v)
-    }
-    return self
+func (self *SampleStream) Peek(fn func(*Sample, int)) *SampleStream {
+	for i, v := range *self {
+		fn(&v, i)
+		self.Set(i, v)
+	}
+	return self
 }
-func (self *SampleStream) Reduce(fn func(result, current Sample, index int) Sample) *SampleStream {
+func (self *SampleStream) Reduce(fn func(Sample, Sample, int) Sample) *SampleStream {
 	return self.ReduceInit(fn, Sample{})
 }
-func (self *SampleStream) ReduceInit(fn func(result, current Sample, index int) Sample, initialValue Sample) *SampleStream {
-	result :=SampleStreamOf()
+func (self *SampleStream) ReduceInit(fn func(Sample, Sample, int) Sample, initialValue Sample) *SampleStream {
+	result := SampleStreamOf()
 	self.ForEach(func(v Sample, i int) {
 		if i == 0 {
 			result.Add(fn(initialValue, v, i))
@@ -313,7 +329,7 @@ func (self *SampleStream) ReduceInit(fn func(result, current Sample, index int) 
 	return self
 }
 
-func (self *SampleStream) ReduceInterface(fn func(result interface{}, current Sample, index int) interface{}) []interface{} {
+func (self *SampleStream) ReduceInterface(fn func(interface{}, Sample, int) interface{}) []interface{} {
 	result := []interface{}{}
 	for i, v := range *self {
 		if i == 0 {
@@ -324,7 +340,7 @@ func (self *SampleStream) ReduceInterface(fn func(result interface{}, current Sa
 	}
 	return result
 }
-func (self *SampleStream) ReduceString(fn func(result string, current Sample, index int) string) []string {
+func (self *SampleStream) ReduceString(fn func(string, Sample, int) string) []string {
 	result := []string{}
 	for i, v := range *self {
 		if i == 0 {
@@ -335,7 +351,7 @@ func (self *SampleStream) ReduceString(fn func(result string, current Sample, in
 	}
 	return result
 }
-func (self *SampleStream) ReduceInt(fn func(result int, current Sample, index int) int) []int {
+func (self *SampleStream) ReduceInt(fn func(int, Sample, int) int) []int {
 	result := []int{}
 	for i, v := range *self {
 		if i == 0 {
@@ -346,7 +362,7 @@ func (self *SampleStream) ReduceInt(fn func(result int, current Sample, index in
 	}
 	return result
 }
-func (self *SampleStream) ReduceInt32(fn func(result int32, current Sample, index int) int32) []int32 {
+func (self *SampleStream) ReduceInt32(fn func(int32, Sample, int) int32) []int32 {
 	result := []int32{}
 	for i, v := range *self {
 		if i == 0 {
@@ -357,7 +373,7 @@ func (self *SampleStream) ReduceInt32(fn func(result int32, current Sample, inde
 	}
 	return result
 }
-func (self *SampleStream) ReduceInt64(fn func(result int64, current Sample, index int) int64) []int64 {
+func (self *SampleStream) ReduceInt64(fn func(int64, Sample, int) int64) []int64 {
 	result := []int64{}
 	for i, v := range *self {
 		if i == 0 {
@@ -368,7 +384,7 @@ func (self *SampleStream) ReduceInt64(fn func(result int64, current Sample, inde
 	}
 	return result
 }
-func (self *SampleStream) ReduceFloat32(fn func(result float32, current Sample, index int) float32) []float32 {
+func (self *SampleStream) ReduceFloat32(fn func(float32, Sample, int) float32) []float32 {
 	result := []float32{}
 	for i, v := range *self {
 		if i == 0 {
@@ -379,7 +395,7 @@ func (self *SampleStream) ReduceFloat32(fn func(result float32, current Sample, 
 	}
 	return result
 }
-func (self *SampleStream) ReduceFloat64(fn func(result float64, current Sample, index int) float64) []float64 {
+func (self *SampleStream) ReduceFloat64(fn func(float64, Sample, int) float64) []float64 {
 	result := []float64{}
 	for i, v := range *self {
 		if i == 0 {
@@ -390,7 +406,7 @@ func (self *SampleStream) ReduceFloat64(fn func(result float64, current Sample, 
 	}
 	return result
 }
-func (self *SampleStream) ReduceBool(fn func(result bool, current Sample, index int) bool) []bool {
+func (self *SampleStream) ReduceBool(fn func(bool, Sample, int) bool) []bool {
 	result := []bool{}
 	for i, v := range *self {
 		if i == 0 {
@@ -409,15 +425,15 @@ func (self *SampleStream) Reverse() *SampleStream {
 	return self
 }
 
-func (self *SampleStream) Replace(fn func(arg Sample, index int) Sample) *SampleStream {
+func (self *SampleStream) Replace(fn func(Sample, int) Sample) *SampleStream {
 	return self.Map(fn)
 }
 
 func (self *SampleStream) Set(index int, val Sample) *SampleStream {
-    if len(*self) > index {
-        (*self)[index] = val
-    }
-    return self
+	if len(*self) > index {
+		(*self)[index] = val
+	}
+	return self
 }
 
 func (self *SampleStream) Skip(skip int) *SampleStream {
@@ -427,21 +443,20 @@ func (self *SampleStream) Skip(skip int) *SampleStream {
 
 func (self *SampleStream) SkippingEach(fn func(Sample, int) int) *SampleStream {
 	for i := 0; i < self.Len(); i++ {
-		skip := fn(*self.Get(i), i)
-		i += skip
+		i += fn(*self.Get(i), i)
 	}
 	return self
 }
 
-func (self *SampleStream) Slice(startIndex int, n int) *SampleStream {
-    last := startIndex+n
-    if len(*self)-1 < startIndex {
-        *self = []Sample{}
-    } else if len(*self) < last {
-        *self = (*self)[startIndex:len(*self)]
-    } else {
-        *self = (*self)[startIndex:last]
-    }
+func (self *SampleStream) Slice(startIndex, n int) *SampleStream {
+	last := startIndex + n
+	if len(*self)-1 < startIndex {
+		*self = []Sample{}
+	} else if len(*self) < last {
+		*self = (*self)[startIndex:len(*self)]
+	} else {
+		*self = (*self)[startIndex:last]
+	}
 	return self
 }
 
@@ -460,17 +475,17 @@ func (self *SampleStream) ToList() []Sample {
 }
 
 func (self *SampleStream) Val() []Sample {
-    if self == nil {
-        return []Sample{}
-    }
-	return *self
+	if self == nil {
+		return []Sample{}
+	}
+	return *self.Copy()
 }
 
-func (self *SampleStream) While(fn func(arg Sample, index int) bool) *SampleStream {
-    for i, v := range self.Val() {
-        if !fn(v, i) {
-            break
-        }
-    }
-    return self
+func (self *SampleStream) While(fn func(Sample, int) bool) *SampleStream {
+	for i, v := range self.Val() {
+		if !fn(v, i) {
+			break
+		}
+	}
+	return self
 }

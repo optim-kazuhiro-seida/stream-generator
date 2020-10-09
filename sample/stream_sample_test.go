@@ -39,6 +39,10 @@ func TestStream(t *testing.T) {
 			t.Fatal("Unexpect Value: AddAll ", index)
 		}
 	})
+	tmp := cloned2.Val()
+	if tmp[0].Str = "aaa"; cloned2.Get(0).Str == "aaa" {
+		t.Fatal("Unexpect Value stream Val.", cloned2)
+	}
 	if stream.Add(Sample{Str: "6", Int: 6}); stream.Len() != 6 {
 		t.Fatal("Unexpect Value stream length.", stream)
 	}
@@ -148,5 +152,18 @@ func TestStream(t *testing.T) {
 	}
 	if tmp := stream.Copy().Skip(2).Limit(2); tmp.Get(0).Int != 3 || tmp.Len() != 2 {
 		t.Fatal("Unexpect Value stream Limit and Skip.", stream)
+	}
+	if !stream.Contains(Sample{Str: "1", Int: 1}) || stream.Contains(Sample{Str: "1", Int: 9}) {
+		t.Fatal("Unexpect Value stream Contains.", stream)
+	}
+	if stream.Add(*stream.Get(0)).Distinct(); stream.Last().Str != "last" {
+		t.Fatal("Unexpect Value stream Distinct.", stream)
+	}
+	sum := 0
+	if stream.SkippingEach(func(sample Sample, _ int) int {
+		sum += sample.Int
+		return 1
+	}); sum != 16 {
+		t.Fatal("Unexpect Value stream SkippingEach.", stream)
 	}
 }
