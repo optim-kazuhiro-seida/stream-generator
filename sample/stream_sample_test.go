@@ -31,8 +31,8 @@ func TestStream(t *testing.T) {
 		},
 	)
 	cloned1 := stream.Clone()
-	cloned2 := stream.Clone()
-	cloned3 := stream.Clone()
+	cloned2 := CreateSampleStream(stream.Clone().Val()...)
+	cloned3 := GenerateSampleStream(stream.Clone().Val())
 
 	stream.ForEach(func(arg Sample, index int) {
 		if arg.Int != index+1 {
@@ -166,4 +166,18 @@ func TestStream(t *testing.T) {
 	}); sum != 16 {
 		t.Fatal("Unexpect Value stream SkippingEach.", stream)
 	}
+
+	if created := CreateSampleStream().Add(Sample{Str: "1", Int: 2}).Clean(); created.IsPreset() {
+		t.Fatal("Unexpect Value stream CreateSampleStream.", created)
+	}
+	if created := GenerateSampleStream(SampleStream{}).Add(Sample{Str: "1", Int: 2}).Clean(); created.IsPreset() {
+		t.Fatal("Unexpect Value stream CreateSampleStream.", created)
+	}
+	if created := CreateSampleStream().Add(Sample{Str: "1", Int: 1}).Add(Sample{Str: "1", Int: 1}).Distinct(); created.Len() != 1 || created.Last().Int != 1 {
+		t.Fatal("Unexpect Value stream CreateSampleStream.", created)
+	}
+	if !CreateSampleStream().Equals(SampleStream{}) {
+		t.Fatal("Unexpect Value stream CreateSampleStream.")
+	}
+
 }

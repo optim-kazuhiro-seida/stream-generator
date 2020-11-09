@@ -66,32 +66,34 @@ import (
 	"reflect"
 	"sort"
 )
-
 type {{.TypeName}}Stream []{{.TypeName}}
-
 func {{.TypeName}}StreamOf(arg ...{{.TypeName}}) {{.TypeName}}Stream {
 	return arg
 }
 func {{.TypeName}}StreamFrom(arg []{{.TypeName}}) {{.TypeName}}Stream {
 	return arg
 }
+func Create{{.TypeName}}Stream(arg ...{{.TypeName}}) *{{.TypeName}}Stream {
+    tmp := {{.TypeName}}StreamOf(arg...)
+    return &tmp
+}
+func Generate{{.TypeName}}Stream(arg []{{.TypeName}}) *{{.TypeName}}Stream {
+    tmp := {{.TypeName}}StreamFrom(arg)
+    return &tmp
+}
 
 func (self *{{.TypeName}}Stream) Add(arg {{.TypeName}}) *{{.TypeName}}Stream {
 	return self.AddAll(arg)
-
 }
-
 func (self *{{.TypeName}}Stream) AddAll(arg ...{{.TypeName}}) *{{.TypeName}}Stream {
 	*self = append(*self, arg...)
 	return self
 }
-
 func (self *{{.TypeName}}Stream) AddSafe(arg *{{.TypeName}}) *{{.TypeName}}Stream {
     if arg != nil {
         self.Add(*arg)
     }
 	return self
-
 }
 func (self *{{.TypeName}}Stream) AllMatch(fn func({{.TypeName}}, int) bool) bool {
 	for i, v := range *self {
@@ -101,7 +103,6 @@ func (self *{{.TypeName}}Stream) AllMatch(fn func({{.TypeName}}, int) bool) bool
 	}
 	return true
 }
-
 func (self *{{.TypeName}}Stream) AnyMatch(fn func({{.TypeName}}, int) bool) bool {
 	for i, v := range *self {
 		if fn(v, i) {
@@ -115,40 +116,35 @@ func (self *{{.TypeName}}Stream) Clone() *{{.TypeName}}Stream {
 	copy(temp, *self)
 	return (*{{.TypeName}}Stream)(&temp)
 }
-
 func (self *{{.TypeName}}Stream) Copy() *{{.TypeName}}Stream {
 	return self.Clone()
 }
-
 func (self *{{.TypeName}}Stream) Concat(arg []{{.TypeName}}) *{{.TypeName}}Stream {
 	return self.AddAll(arg...)
 }
-
 func (self *{{.TypeName}}Stream) Contains(arg {{.TypeName}}) bool {
 	return self.FindIndex(func(_arg {{.TypeName}}, index int) bool { return reflect.DeepEqual(_arg, arg) }) != -1
 }
-
+func (self *{{.TypeName}}Stream) Clean() *{{.TypeName}}Stream {
+    return Create{{.TypeName}}Stream()
+}
 func (self *{{.TypeName}}Stream) Delete(index int) *{{.TypeName}}Stream {
 	return self.DeleteRange(index, index)
 }
-
 func (self *{{.TypeName}}Stream) DeleteRange(startIndex, endIndex int) *{{.TypeName}}Stream {
 	*self = append((*self)[:startIndex], (*self)[endIndex+1:]...)
 	return self
 }
-
 func (self *{{.TypeName}}Stream) Distinct() *{{.TypeName}}Stream {
-	m := map[{{.TypeName}}]bool{}
-	self.Filter(func(arg {{.TypeName}}, index int) bool {
-		_, ok := m[arg]
-		if !ok {
-			m[arg] = true
+	stack := {{.TypeName}}StreamOf()
+	return self.Filter(func(arg {{.TypeName}}, _ int) bool {
+		if !stack.Contains(arg) {
+			stack.Add(arg)
+			return true
 		}
-		return !ok
+		return false
 	})
-	return self
 }
-
 func (self *{{.TypeName}}Stream) Equals(arr []{{.TypeName}}) bool {
 	if (*self == nil) != (arr == nil) || len(*self) != len(arr) {
 		return false
@@ -170,7 +166,6 @@ func (self *{{.TypeName}}Stream) Filter(fn func({{.TypeName}}, int) bool) *{{.Ty
 	*self = _array
 	return self
 }
-
 func (self *{{.TypeName}}Stream) Find(fn func({{.TypeName}}, int) bool) *{{.TypeName}} {
 	i := self.FindIndex(fn)
 	if -1 != i {
@@ -178,7 +173,6 @@ func (self *{{.TypeName}}Stream) Find(fn func({{.TypeName}}, int) bool) *{{.Type
 	}
 	return nil
 }
-
 func (self *{{.TypeName}}Stream) FindIndex(fn func({{.TypeName}}, int) bool) int {
 	for i, v := range self.Val() {
 		if fn(v, i) {
@@ -187,11 +181,9 @@ func (self *{{.TypeName}}Stream) FindIndex(fn func({{.TypeName}}, int) bool) int
 	}
 	return -1
 }
-
 func (self *{{.TypeName}}Stream) First() *{{.TypeName}} {
 	return self.Get(0)
 }
-
 func (self *{{.TypeName}}Stream) ForEach(fn func({{.TypeName}}, int)) *{{.TypeName}}Stream {
 	for i, v := range self.Val() {
 		fn(v, i)
@@ -237,7 +229,6 @@ func (self *{{.TypeName}}Stream) IsPreset() bool {
 func (self *{{.TypeName}}Stream) Last() *{{.TypeName}} {
 	return self.Get(self.Len() - 1)
 }
-
 func (self *{{.TypeName}}Stream) Len() int {
     if self == nil {
 		return 0
@@ -251,7 +242,6 @@ func (self *{{.TypeName}}Stream) Limit(limit int) *{{.TypeName}}Stream {
 func (self *{{.TypeName}}Stream) Map(fn func({{.TypeName}}, int) {{.TypeName}}) *{{.TypeName}}Stream {
 	return self.ForEach(func(v {{.TypeName}}, i int) { self.Set(i, fn(v, i)) })
 }
-
 func (self *{{.TypeName}}Stream) MapAny(fn func({{.TypeName}}, int) interface{}) []interface{} {
 	_array := make([]interface{}, 0, len(*self))
 	for i, v := range *self {
@@ -259,7 +249,6 @@ func (self *{{.TypeName}}Stream) MapAny(fn func({{.TypeName}}, int) interface{})
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Int(fn func({{.TypeName}}, int) int) []int {
 	_array := make([]int, 0, len(*self))
 	for i, v := range *self {
@@ -267,7 +256,6 @@ func (self *{{.TypeName}}Stream) Map2Int(fn func({{.TypeName}}, int) int) []int 
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Int32(fn func({{.TypeName}}, int) int32) []int32 {
 	_array := make([]int32, 0, len(*self))
 	for i, v := range *self {
@@ -275,7 +263,6 @@ func (self *{{.TypeName}}Stream) Map2Int32(fn func({{.TypeName}}, int) int32) []
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Int64(fn func({{.TypeName}}, int) int64) []int64 {
 	_array := make([]int64, 0, len(*self))
 	for i, v := range *self {
@@ -283,7 +270,6 @@ func (self *{{.TypeName}}Stream) Map2Int64(fn func({{.TypeName}}, int) int64) []
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Float32(fn func({{.TypeName}}, int) float32) []float32 {
 	_array := make([]float32, 0, len(*self))
 	for i, v := range *self {
@@ -291,7 +277,6 @@ func (self *{{.TypeName}}Stream) Map2Float32(fn func({{.TypeName}}, int) float32
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Float64(fn func({{.TypeName}}, int) float64) []float64 {
 	_array := make([]float64, 0, len(*self))
 	for i, v := range *self {
@@ -299,7 +284,6 @@ func (self *{{.TypeName}}Stream) Map2Float64(fn func({{.TypeName}}, int) float64
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Bool(fn func({{.TypeName}}, int) bool) []bool {
 	_array := make([]bool, 0, len(*self))
 	for i, v := range *self {
@@ -307,7 +291,6 @@ func (self *{{.TypeName}}Stream) Map2Bool(fn func({{.TypeName}}, int) bool) []bo
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2Bytes(fn func({{.TypeName}}, int) []byte) [][]byte {
 	_array := make([][]byte, 0, len(*self))
 	for i, v := range *self {
@@ -315,7 +298,6 @@ func (self *{{.TypeName}}Stream) Map2Bytes(fn func({{.TypeName}}, int) []byte) [
 	}
 	return _array
 }
-
 func (self *{{.TypeName}}Stream) Map2String(fn func({{.TypeName}}, int) string) []string {
 	_array := make([]string, 0, len(*self))
 	for i, v := range *self {
@@ -355,11 +337,9 @@ func (self *{{.TypeName}}Stream) Min(fn func({{.TypeName}}, int) float64) *{{.Ty
 	}
 	return self.Get(index)
 }
-
 func (self *{{.TypeName}}Stream) NoneMatch(fn func({{.TypeName}}, int) bool) bool {
 	return !self.AnyMatch(fn)
 }
-
 func (self *{{.TypeName}}Stream) Get(index int) *{{.TypeName}} {
 	if self.Len() > index && index >= 0 {
 		tmp := (*self)[index]
@@ -389,7 +369,6 @@ func (self *{{.TypeName}}Stream) ReduceInit(fn func({{.TypeName}}, {{.TypeName}}
 	*self = result
 	return self
 }
-
 func (self *{{.TypeName}}Stream) ReduceInterface(fn func(interface{}, {{.TypeName}}, int) interface{}) []interface{} {
 	result := []interface{}{}
 	for i, v := range *self {
@@ -478,30 +457,25 @@ func (self *{{.TypeName}}Stream) ReduceBool(fn func(bool, {{.TypeName}}, int) bo
 	}
 	return result
 }
-
 func (self *{{.TypeName}}Stream) Reverse() *{{.TypeName}}Stream {
 	for i, j := 0, self.Len()-1; i < j; i, j = i+1, j-1 {
 		(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
 	}
 	return self
 }
-
 func (self *{{.TypeName}}Stream) Replace(fn func({{.TypeName}}, int) {{.TypeName}}) *{{.TypeName}}Stream {
 	return self.Map(fn)
 }
-
 func (self *{{.TypeName}}Stream) Set(index int, val {{.TypeName}}) *{{.TypeName}}Stream {
     if len(*self) > index {
         (*self)[index] = val
     }
     return self
 }
-
 func (self *{{.TypeName}}Stream) Skip(skip int) *{{.TypeName}}Stream {
 	self.Slice(skip, self.Len()-skip)
 	return self
 }
-
 func (self *{{.TypeName}}Stream) SkippingEach(fn func({{.TypeName}}, int) int) *{{.TypeName}}Stream {
 	for i := 0; i < self.Len(); i++ {
 		skip := fn(*self.Get(i), i)
@@ -509,7 +483,6 @@ func (self *{{.TypeName}}Stream) SkippingEach(fn func({{.TypeName}}, int) int) *
 	}
 	return self
 }
-
 func (self *{{.TypeName}}Stream) Slice(startIndex, n int) *{{.TypeName}}Stream {
     last := startIndex+n
     if len(*self)-1 < startIndex {
@@ -521,29 +494,26 @@ func (self *{{.TypeName}}Stream) Slice(startIndex, n int) *{{.TypeName}}Stream {
     }
 	return self
 }
-
 func (self *{{.TypeName}}Stream) Sort(fn func(i, j int) bool) *{{.TypeName}}Stream {
 	sort.Slice(*self, fn)
 	return self
 }
-
 func (self *{{.TypeName}}Stream) SortStable(fn func(i, j int) bool) *{{.TypeName}}Stream {
 	sort.SliceStable(*self, fn)
 	return self
 }
-
 func (self *{{.TypeName}}Stream) ToList() []{{.TypeName}} {
 	return self.Val()
 }
-
+func (self *{{.TypeName}}Stream) Unique() *{{.TypeName}}Stream {
+	return self.Distinct()
+}
 func (self *{{.TypeName}}Stream) Val() []{{.TypeName}} {
 	if self == nil {
 		return []{{.TypeName}}{}
 	}
 	return *self.Copy()
 }
-
-
 func (self *{{.TypeName}}Stream) While(fn func({{.TypeName}}, int) bool) *{{.TypeName}}Stream {
     for i, v := range self.Val() {
         if !fn(v, i) {
