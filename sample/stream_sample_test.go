@@ -46,6 +46,12 @@ func TestStream(t *testing.T) {
 	if stream.Add(Sample{Str: "6", Int: 6}); stream.Len() != 6 {
 		t.Fatal("Unexpect Value stream length.", stream)
 	}
+	if stream.AnyMatch(func(sample Sample, _ int) bool {
+		sample.Int = 99999
+		return true
+	}); stream.Contains(Sample{Str: "", Int: 99999}) {
+		t.Fatal("Unexpect Value stream AllMatch.", stream)
+	}
 	if !stream.AllMatch(func(_ Sample, _ int) bool { return true }) ||
 		stream.AllMatch(func(_ Sample, _ int) bool { return false }) {
 		t.Fatal("Unexpect Value stream AllMatch.", stream)
